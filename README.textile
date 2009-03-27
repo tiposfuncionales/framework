@@ -1,0 +1,22 @@
+h1. FrameWork Documentation
+
+FrameWork, like all other frame based systems, is ultimately based on Minsky's frame theory of the representation of knowledge "[Minsky 1975]":http://web.media.mit.edu/~minsky/papers/Frames/frames.html. A frame is an object with an associated list of attributes. Objects (ala object-oriented programming) are data structures with associated procedures. The attributes of a frame include VALUES and BEHAVIORS. Some behaviors, called DEMONS, are functions attached to attributes to monitor their access and modification, and initiate actions if invoked or otherwise activated.
+
+Using frames we can create a network of objects representing facts, things, and other concepts, connected through a variety of links. Objects and their links are represented as frames with names, slots, facets, and values. (Other frame systems may have more levels of representation. The primitives given in FrameWork, however, are easily extended to arbitrary numbers of levels because of the uniformity of representation.) Each object has a name (frame) and a set of slots; each slot has a set of facets; and each facet has a set of values. Values may be arbitrary lisp objects, including functions and the name of other frames. In some sense a frame is a generalized property list: it contains more than just values, and can inherit information from related frames.
+
+Frames are implemented as nested association lists (key-value pairs) and are stored in a hash table under the frame name for efficient access:
+<pre>
+<code>
+          (<frame name>
+   		 (<slot1> (<facet1> . (<value1> <value2> ...))
+   			  (<facet2> . (<value1> ...))
+   			  ...)
+   		 (<slot2> (<facet1> . (<value1> ...)) ...)
+   		 ...)
+    </code>
+</pre>
+Slots may be used to name relations by making the name of one frame the value of the slot in another frame. For example, the :AKO slot (an abbreviation for "A Kind Of") and its inverse, :KINDSOF, link objects in the class hierarchy. Many other types of links exist, including user-defined links. These relations may be used to connect the frames into a network. (Note that the relationship defined by :AKO links is a network and need not be a hierarchy, since it is permissible for an object to have more than one :AKO value, and for many objects to be linked to the same parent by :AKO slot. For many functions even :AKO cycles are permitted, since these functions specifically check for cycles.)
+
+The primary facet is :VALUE, which is used to store the value of an attribute. Other system defined facets include :DEFAULT, :MODE, :METHOD, :If-Needed, :If-Fetched, :If-Removed. The :MODE facet is used to associate properties with objects. The :METHOD facet is used to name procedures that are invoked in response to messages to an object. The :If-Needed, :If-Fetched, :If-Removed, and :DEFAULT facets are demons which are used to monitor the :VALUE facet.
+
+In addition, there are demons which monitor the :VALUE facet and maintain inverse-slot relationships for any values stored there. For example, whenever a value x is stored into the :AKO slot of the object y, this demon automatically stores y into the :KINDSOF slot of the object x.
