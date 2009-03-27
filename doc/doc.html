@@ -1,0 +1,1269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <title>Framework</title>
+    <link type="text/css" rel="stylesheet" href="style.css"/>
+</head>
+<body>
+    <h1>Framework Documentation</h1>
+    <p>FrameWork, like all other frame based systems, is ultimately based
+    on Minsky's frame theory of the representation of knowledge
+    <a href="http://web.media.mit.edu/~minsky/papers/Frames/frames.html" title="A Framework for Representing Knowledge">[Minsky 1975]</a>.
+    A frame is an object with an associated list of attributes. Objects
+    (ala object-oriented programming) are data structures with associated
+    procedures. The attributes of a frame include VALUES and BEHAVIORS.
+    Some behaviors, called DEMONS, are functions attached to attributes
+    to monitor their access and modification, and initiate actions
+    if invoked or otherwise activated.</p> 
+   
+    <p>Using frames we can create a network of objects representing facts,
+    things, and other concepts, connected through a variety of links.
+    Objects and their links are represented as frames with names, slots,
+    facets, and values. (Other frame systems may have more levels of
+    representation. The primitives given in FrameWork, however, are easily
+    extended to arbitrary numbers of levels because of the uniformity of
+    representation.) Each object has a name (frame) and a set of slots;
+    each slot has a set of facets; and each facet has a set of values.
+    Values may be arbitrary lisp objects, including functions
+    and the name of other frames. In some sense a frame is a generalized
+    property list: it contains more than just values, and can inherit 
+    information from related frames.</p>
+   
+    <p>Frames are implemented as nested association lists (key-value pairs) and
+    are stored in a hash table under the frame name for efficient access:</p>
+    <pre>
+          (&lt;frame name&gt;
+   		 (&lt;slot1&gt; (&lt;facet1&gt; . (&lt;value1&gt; &lt;value2&gt; ...))
+   			  (&lt;facet2&gt; . (&lt;value1&gt; ...))
+   			  ...)
+   		 (&lt;slot2&gt; (&lt;facet1&gt; . (&lt;value1&gt; ...)) ...)
+   		 ...)
+    </pre>
+   
+    <p>Slots may be used to name relations by making the name of one frame
+    the value of the slot in another frame. For example, the :AKO slot
+    (an abbreviation for "A Kind Of") and its inverse, :KINDSOF, link
+    objects in the class hierarchy. Many other types of links exist,
+    including user-defined links. These relations may be used to 
+    connect the frames into a network. (Note that the relationship defined
+    by :AKO links is a network and need not be a hierarchy, since it is
+    permissible for an object to have more than one :AKO value, and for
+    many objects to be linked to the same parent by :AKO slot. For many
+    functions even :AKO cycles are permitted, since these functions
+    specifically check for cycles.)</p>
+   
+    <p>The primary facet is :VALUE, which is used to store the value of an
+    attribute. Other system defined facets include :DEFAULT, :MODE,
+    :METHOD, :If-Needed, :If-Fetched, :If-Removed. The :MODE facet is used
+    to associate properties with objects. The :METHOD facet is used to
+    name procedures that are invoked in response to messages to an object.
+    The :If-Needed, :If-Fetched, :If-Removed, and :DEFAULT facets are demons 
+    which are used to monitor the :VALUE facet.</p> 
+   
+    <p>In addition, there are demons which monitor the :VALUE facet and maintain
+    inverse-slot relationships for any values stored there. For example,
+    whenever a value x is stored into the :AKO slot of the object y, this
+    demon automatically stores y into the :KINDSOF slot of the object x.</p>
+   
+    
+    <h2>User Guide</h2>
+
+    <a name="star-version-star" ></a>
+    <ul id="function">
+    <li id="title">*VERSION* ("2.1  MON 15-MAR-93 12:00:47")</li>
+    <li id="type">[PARAMETER]</li> 
+    <li id="body">Current version number/date for FrameWork.</li>
+    </ul>
+
+    
+    <ul id="function">
+    <li id="title">*DEFAULT-INHERITANCE-LINK* (:ako)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">Default link used for inheritance in FrameWork.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">*DEFAULT-INHERITANCE-FACET* (:value)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">Default facet used for inheritance in FrameWork.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAMEWORK-COPYRIGHT (&amp;optional (stream *standard-output*))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Prints a FrameWork copyright notice and header upon startup.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">CURRENT-TIME-STRING (&amp;optional (mode 'hyphen))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns a string for the current time and date in a variety of modes.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">DATE-STRING (month date year &amp;optional (mode 'hyphen))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Given a date, returns a string for the date in a variety of modes.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">YEAR-STRING (year &amp;optional (mode 'long))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Formats a year number in various ways.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">TIME-STRING (hour min secs &amp;optional (mode 'full))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Formats the current time in a variety of ways.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">DOW-STRING (dow &amp;optional (mode 'short))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Formats the day of week in a variety of modes.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">MONTH-STRING (month &amp;optional (mode 'short))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Formats the month in a variety of ways.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAMEWORK-HERALD (&amp;optional (stream *standard-output*))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Prints a FrameWork Herald. Does basic copyright statement,
+       as well as the time and date.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">EQMEMB (item list &key (test #'equal))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Checks whether ITEM is either equal to or a member of LIST.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">NEQ (x y)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">not eq</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">CAR-EQ (x y)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Checks whether Y is eq to the car of X.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    DREMOVE (item list)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Destructive remove which replaces the original list with the list
+       that results when ITEM is deleted from LIST.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title"> 
+    DISPLACE (list val)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Replaces LIST with VAL by destructively modifying the car and cdr of
+       LIST. Warning: VAL must not share list structure with LIST or you'll
+       be sorry.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">TAILPUSH (item list)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Pushes ITEM onto the tail of LIST. Does not work if the list is null.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">DO-QUEUE (((&amp;optional (node 'node) (queue 'queue)                   
+              (children 'children) visited) initial-queue children-form
+              &amp;optional (dequeue-form '(pop queue)) (merge-form '
+              (setq queue (append queue progeny))) result-form)
+              &body body)</li>
+    <li id="type">[MACRO]</li>
+    <li id="body">Implements generic search using a queue representation. 
+       If the VISITED iteration variable is specified, checks to see if a
+       node has already been visited before proceeding, to prevent
+       infinite loops in the search when cycles are encountered. It also
+       prevents multiple occurrences of a node when several inheritance
+       paths lead to the same node. If VISITED is specified, it is the name
+       of the variable where the search history is maintained.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">*FRAME-TABLE* ((make-hash-table :test #'equal))</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">Hash table where all the frame definitions are stored. 
+       Since we are using a hash table instead of a property list, the
+       frame name need not be an atom. This allows us to attach
+       information to any lisp object.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">*FRAMES* (nil)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">Global list of the names of all user defined frames.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">*SYSTEM-FRAMES* (nil)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">Global list of all system defined frame names. These frames define
+       the default relations (slots) and their inverses. Frames included
+       on this list are normally invisible to user deleting and saving
+       operations.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">DEFINE-FRAME (name frame)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Internal function for creating a new frame. Pushes the name of the 
+       frame onto the list of user defined frames.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">CREATE-FRAME (name)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Creates a new blank frame named NAME.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">DEF-FRAME (name frame)</li>
+    <li id="type">[MACRO]</li>
+    <li id="body">External function for creating a new frame. The name and
+       frame do not need to be quoted.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAME (name)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns the frame "property" (frame structure) of NAME if there is
+       one; otherwise returns nil.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAME+ (framename)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Gets the frame associate with framename. If a frame structure does
+       not already exist, creates a new one and returns it.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAMEP (name)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Predicate which returns T if NAME names a defined frame, nil
+       otherwise.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">DELETE-FRAME (frame)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Deletes a frame definition without removing any references 
+       to the frame in other frames.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">DELETE-FRAMES (&amp;optional (frame-list *frames*))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Deletes a specified list of frames, which defaults to all user
+       defined frames. Evaluating (delete-frames) is a quick way to
+       undo your work without eliminating the system defined frames.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FLISTP (flist)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns T if the FLIST is a flist.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FLIST-KEY (flist)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns the key of a flist.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FLIST-BUCKET (flist)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns the bucket of a flist.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FLIST-KEYS (flist)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns a list of the keys of the items in the bucket of flist.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAMEASSOC (key flist &key (test #'eq))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Finds the item with key KEY in the FLIST if present.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAMEASSOC+ (key flist &key (test #'eq))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Finds item with key KEY in the FLIST if present, otherwise inserts
+       it. Returns the entry.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FLIST-GET (flist &rest path)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Follows the key path down to the value. For retrieving items from
+       an flist.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FLIST-PUT (flist item &rest path)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Stores ITEM in the bucket pointed to by the path of keys.
+       Returns the modified FLIST.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FLIST-DELETE (flist &rest path)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Deletes the entire item accessed. Returns the modified FLIST.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FLIST-CLEAR (flist &rest path)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Deletes the bucket of the indicated item, but leaves the key.
+       Returns the modified FLIST.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FLIST-REPLACE (flist item &rest path)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Replaces all existing items with the item. Returns the modified
+       FLIST. Equivalent to Flist-Clear followed by Flist-Put.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAMEGET (frame slot &amp;optional (facet :value) (no-demons t))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Fetches information from a frame given an access path consisting of
+       a frame, a slot, and a facet. FACET defaults to the :VALUE facet.
+       Returns the list of values stored on the FACET facet of the SLOT
+       slot of the object FRAME. The actual list within the frame is
+       returned, so surgery performed on the list of values returned by
+       FrameGet will change the frame. If no-demons is nil, will run
+       [<FACET> :get :after] demons.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAMEGET-INTERNAL (frame slot &amp;optional (facet :value))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Internal version of frameget that does not execute demons.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAMEGET! (frame slot &amp;optional (facet :value) (no-demons t))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Assumes that there is only one value in the FACET facet of the SLOT
+       slot of the object FRAME and returns it. (If there is more than one
+       value, the first one is returned.)</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">INV-SLOT (slot)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns the inverse slot of SLOT, if it has one, otherwise nil.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    FRAMEGET-V-D (frame slot)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">First checks the :VALUE facet and returns the values if there are
+       any. If there are no values in the :VALUE facet, returns any values
+       present in the :DEFAULT facet of the frame's slot.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">HAS-SLOT (frame slot)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns the tail of FRAME's slot list beginning with SLOT if
+       FRAME has a slot named SLOT; otherwise nil.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    SLOTS (frame)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns a list of the slots of the object FRAME.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FACETS (frame slot)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns a list of the facets of the SLOT slot of the object FRAME.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">SLOTNAMES (frame)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns a list of the names of the slots of the object FRAME.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FACETNAMES (frame slot)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns a list of the names of the facets of the SLOT slot
+       of the object FRAME.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAMEPUT (frame slot facet value &amp;optional no-demons)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Used for placing information into a frame.
+       Stores VALUE as one of the values of the FACET facet of the SLOT
+       slot of the object FRAME. If no-demons is nil, runs any [<FACET> :put
+       :after] demons. For example, the (:VALUE :PUT :AFTER) demon handles
+       inverse slot maintenance: If FACET is eq to :VALUE and SLOT has an
+       inverse, then FramePut also puts the object FRAME in the :VALUE facet
+       of the (Inv-Slot SLOT) slot of VALUE. If VALUE is already present,
+       does not run demons. Returns Value if it was stored, NIL otherwise.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAMEPUT-INTERNAL (frame slot facet value)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Internal version of FramePut which does not execute demons.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAMEPUT! (frame slot facet value &amp;optional no-demons)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Stores VALUE as the *unique* value of the FACET facet of the SLOT
+       slot of the object FRAME. It accomplishes this by first removing any
+       existing value(s) from the frame.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">ADD-VALUE (frame slot value &amp;optional no-demons)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Adds a value to the :value facet of the frame's slot.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">MAKE-FRAME (name &rest slots)                                       
+    <li id="type">[MACRO]</li>
+       Defines a new frame named NAME with the specified SLOTS like
+       Def-Frame, but with side-effects. Works by calling frameput.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRPLFACET (frame slot facet values)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Stores VALUES as the values of the FACET facet of the SLOT slot 
+       of FRAME, replacing any previous values. Does not run any demons,
+       and so does not maintain inverse slot relationships.
+       This is a fast way to store multiple values. Reports an error if
+       VALUES is not a list.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAMEREMOVE (frame slot facet value &amp;optional no-demons)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Deletes VALUE from the FACET facet of the SLOT slot of the object
+       FRAME. In no-demons is nil, runs any [<FACET> :remove :after]
+       demons. The demons include inverse-slot maintenance: If FACET is
+       :VALUE and SLOT has an inverse, then FrameRemove also removes FRAME
+       from the (Inv-Slot SLOT) :value of VALUE. Returns VALUE if it was
+       deleted, nil otherwise.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAMEREMOVE-INTERNAL (framename slotname facetname value)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Internal version of FrameRemove which does not execute demons.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">KILL-FACET (frame slot facet &amp;optional no-demons)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Deletes the entire FACET facet from the SLOT slot of the object
+       FRAME. Returns FACET if it was deleted, nil otherwise. If no-demons
+       is nil, runs any associated demons, such as inverse-slot maintenance.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">KILL-SLOT (frame slot &amp;optional no-demons)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Deletes the entire SLOT slot of the object FRAME.
+       Returns SLOT if it was deleted, nil otherwise. If no-demons is
+       nil, runs any associated demons, such as inverse-slot maintenance.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">KILL-FRAME (frame &amp;optional no-demons)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Deletes the object FRAME.
+       Returns FRAME if it was deleted, nil otherwise. If no-demons is
+       nil, runs any associated demons, such as inverse-slot maintenance.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">(SETF FRAMEGET) (value)</li>
+    <li id="type">[SETF MAPPING]</li>
+    <li id="body"></li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">(SETF FRAMEGET!) (value)</li>
+    <li id="type">[SETF MAPPING]</li>
+    <li id="body"></li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">MERGE-FRAME (mainframe mergee)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Merges mergee into mainframe. If a slot was present in both MainFrame
+       and Mergee, all of its facets are seen as they were in MainFrame.
+       Surgery performed on Mergee will change MainFrame. Does not run any
+       demons, and so does not maintain inverse slot relationships.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">SHARE-SLOT (frame1 slot frame2)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Makes FRAME2 share FRAME1's SLOT by destructive modification if
+       FRAME2 does not already have a slot named SLOT. Later surgery
+       performed on the contents of SLOT in either frame affects both
+       frames. For example, any value installed in FRAME1 or FRAME2 using
+       FramePut will be shared by both frames. Does not run any demons,
+       and so does not maintain inverse slot relationships.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">COPY-SLOTS (frame1 slots frame2 &amp;optional facet-restrictions)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Copies all slots in the list SLOTS from FRAME1 to FRAME2. 
+       Maintains inverse slot relationships. Facet-restrictions is a list
+       of facets to copy. If nil, all facets of the slots are copied.
+       Returns nil.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">@ (&amp;optional frame slot facet value)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Indirection pointer to the data in another frame.
+       Behaves like FramePut if the first four arguments are non-NIL,
+       and like FrameGet if only the first three are non-NIL. If only
+       FRAME and SLOT are given, returns the list of SLOT's facets.
+       If only FRAME is given, returns the list of FRAME's slots.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">IMMEDIATE-PROGENY (frame paths)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns the children of FRAME along the specified PATHS. PATHS
+       can be either a list of possible paths, or a single path.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAMEGETCLASSES (frame &amp;optional (path :ako))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns a list of the classes of a frame.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">TRANSITIVE-CLOSURE (frame &amp;optional (slot :ako) (facet :value))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Finds the transitive closure of FRAME by following paths specified
+       by SLOT/FACET by traversing the paths in a breadth-first manner.
+       Returns the set of all frames found without duplicates. Checks to
+       see if a frame has already been visited before proceeding, to
+       prevent infinite loops when cycles are encountered.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">LEAVES (frame &amp;optional (slot :kindsof) (facet :value))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Finds the leaf nodes (buds) of the tree rooted at FRAME by descending
+       SLOT/FACET paths by traversing the paths in a breadth-first
+       manner. Returns the set of all frames found without duplicates.
+       Checks to see if a frame has already been visited before
+       proceeding, to prevent infinite loops when cycles are encountered.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">PROGENY (frame &amp;optional (slot :kindsof) (facet :value))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Finds the progeny of FRAME by following SLOT/FACET paths by
+       traversing the paths in a breadth-first manner. Returns the
+       set of all frames found without duplicates. Checks to see if
+       a frame has already been visited before proceeding,
+       to prevent infinite loops when cycles are encountered.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">KILL-PATH (frame &amp;optional (slot :kindsof) (facet :value))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Kills FRAME and all of its progeny by following SLOT/FACET paths
+       by traversing the paths in a breadth-first manner. As each object
+       is destroyed, inverse slot relationships are maintained by
+       calling appropriate removal demons. This function is intended for
+       the destruction of temporary objects. Frame kernel objects are
+       protected against Kill-Path.
+       Returns the set of all frames found without duplicates.
+       Checks to see if a frame has already been visited before
+       proceeding, to prevent infinite loops when cycles are encountered.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">%FRAME (nil)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">Global variable containing frame environment's frame arg
+       for use by demons.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">%SLOT (nil)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">Global variable containing frame environment's slot arg
+       for use by demons.
+   
+    %FACET (nil)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">Global variable containing frame environment's facet arg
+       for use by demons.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">%VALUE (nil)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">Global variable containing frame environment's value arg
+       for use by demons.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">%OTHER-ARGS (nil)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">Global variable containing frame environment's other args
+       for use by demons.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    *VALUES-MODES* ('((:first \. some) (:no-values \. mapc)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">(:append \. mapcan) (:collect \. mapcar)))
+       Global variable containing all methods frame-eval may use
+       to collect values from demon invocation.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    FRAME-EVAL (demons values-mode frame slot facet</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">&amp;optional value other-args)
+       Binds %frame, %slot, %facet, %value and %other-args in the 
+       Frame Environment to the supplied values, and then runs
+       the demons, returning the result as specified by the values mode.
+       Possible values-modes include :FIRST, :NO-VALUES, :APPEND, and
+       :COLLECT. Demons is a list of demons, which are forms to be evaluated
+       in the frame environment.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    DEMON-P (demon)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns T if the frame is a demon.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    DEFINE-DEMON ((demon-frame &amp;optional (demon-slot :demon)            
+                  (demon-facet :value)) &body body)</li>
+    <li id="type">[MACRO]</li>
+    <li id="body">Macro for defining a new demon. The first argument is the name of the
+       demon (i.e., where it is stored) followed by the body of the
+       definition. The name is of the form (demon-frame demon-slot
+       demon-facet), where demon-frame is the main name of the demon and the
+       slot and facet further characterize the demon's actions. Demons have
+       access to the frame environment, which consists of the global
+       variables %frame %slot %facet %value of the calling frame and
+       %other-args.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">RUN-DEMON (demon-frame &amp;optional (demon-slot :demon)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">(demon-facet :value) (values-mode :append) frame slot
+               facet value other-args)
+       Retrieves the demon definition and evaluates it in the frame 
+       environment using frame-eval. Values-mode specifies how values
+       are returned: no-values, append, collect, or just the first value.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">*CACHE-VALUES* (nil)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">If T, the result of FrameGet-Z demon invocation is cached in the
+       VALUE slot of the calling frame.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAMEGET-Z (frame slot facet &key legal-demons (path :ako)       
+                (path-facet :value) path-focus ancestors-focus args
+                (cache-values *cache-values*) (values-mode :append))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns the same list as FrameGet, unless the frame object has
+       no slot-facet values, in which case a breadth-first search
+       is performed along the path relation from the frame until
+       such values are found. This enables slot values to be inherited
+       through network links. Information which is common to many objects
+       may be stored in a common ancestor (instead of redundantly storing
+       it in each object) and inherited by its progeny. Also
+       value-returns the unexplored queue.
+       LEGAL-DEMONS is a list of demons to try if the facet has no value.
+       For example, if we want to definitely check :DEFAULT and
+       :IF-NEEDED demons, instead of relying on frameget's demon invocation,
+       specify LEGAL-DEMONS as '(:DEFAULT :IF-NEEDED).
+       Path-focus is an extra path tried for the first frame. This is
+       useful for methods, where the first frame could be an instance of a
+       class instead of a class. Ancestors-focus is a list of ancestors to
+       be focused upon instead of starting the search at the frame -- this
+       is useful in method invocation where we sometimes want to consider
+       only a specific set of ancestors of the frame.
+       If cache-values is T, values from FrameGet-Z invocation are cached
+       in the :VALUE facet of the slot.
+         
+       Values-mode specifies how the values of demon invocation should be
+       returned.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">FRAMEGET-Z-LOCAL (frame slot facet dfacets</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">&amp;optional args (cache-values *cache-values*)
+                      (values-mode :append))
+       Returns the value of the first facet or demon-facet that has a value.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">IS (node supernode &amp;optional (path :ako) (blockcats nil)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">visited)
+       Returns non-NIL if, following path links, node is a descendent of
+       supernode if supernode is an atom, or if node is a member of
+       supernode if supernode is a list. The search along path will ignore
+       blockcats.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">CLASS-P (node)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Tests to see if its argument is a class.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">SUPERCLASSES (node)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns the superclasses of a node.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">(SETF SUPERCLASSES) (value)</li>
+    <li id="type">[SETF MAPPING]</li>
+    <li id="body"></li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">SUBCLASSES (node)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns the subclasses of a node.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">(SETF SUBCLASSES) (value)</li>
+    <li id="type">[SETF MAPPING]</li>
+    <li id="body"></li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">DEFCLASS (name superclasses &rest slots)</li>
+    <li id="type">[MACRO]</li>
+    <li id="body">Defines a new class with the specified name, superclasses and slots.
+       Superclasses defaults to (THING) if not given by the user, so that
+       the class hierarchy is rooted at THING.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">SUBCLASS-P (node &amp;optional (superclass :thing))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Tests to see if its argument is a subclass of superclass, which
+       defaults to the root class.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">SUPERCLASS-P (node &amp;optional subclass)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Tests to see if its argument is a superclass of subclass, which
+       defaults to nil.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">INSTANCE-OF (node)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns the CLASS of a node.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">(SETF INSTANCE-OF) (class)</li>
+    <li id="type">[SETF MAPPING]</li>
+    <li id="body"></li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">INSTANCE-P (node)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Tests to see if its argument is an instance, but doesn't care of what
+       frame it is an instance.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">INSTANCES (node)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns the instances of a node.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">IS-A-P (node supernode)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Tests to see if NODE is a SUPERNODE by searching the class hierarchy.
+       Will traverse one CLASS link at the start of the search to
+       correctly process leaf instances, and then continues with :AKO links.
+       Returns the type of link (:CLASS or :AKO) or NIL.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">INSTANCE-NAME (type)</li>
+    <li id="type">[MACRO]</li>
+    <li id="body">Generates a new symbol, given the basic name of the frame.
+       This is used to guarrantee a unique frame name by adding a
+       numerical suffix to the name.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">MERGE-HERITAGE (frame class &key (path :ako)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">(path-facets '(:value)) slots-to-ignore)
+       Merges the structure pointed to by the FRAME with all the
+       corresponding structures of the frames accessible along the :AKO
+       link. SLOTS-TO-IGNORE is a list of the slots which shouldn't be
+       merged. Values are appended.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">MAKE-INSTANCE (class &rest slot-values-list)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Generates a new instance of the class: Creates a name for the
+       instance, a frame for the name, and links that frame to the class via
+       a CLASS link. Copies the default slot values inherited from the class
+       hierarchy into the instance and then initializes the supplied slot
+       values. Class, slotnames, and slot values must all be quoted. For
+       example, (make-instance 'elephant 'name "Clyde".
+       Returns the name of the instance.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">INITIALIZE-SLOTS (frame slot-values-list)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Initializes the values of the specified slots in frame, installing
+       them in the :value facet. Slot-values-list is a list of
+       alternating slot names and values.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    EXTRACT-DECLARATIONS (body &amp;optional environment)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Extracts the documentation string and declarations from a function
+       body.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    DEFMETHOD ((message-name frame &amp;optional (mode :method)) arglist    
+               &body body)</li>
+    <li id="type">[MACRO]</li>
+    <li id="body">Defines a method for message MESSAGE-NAME for the FRAME object.
+       Mode is either :METHOD, :BEFORE or :AFTER, for regular methods,
+       before and after methods.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    *ANCESTORS-QUEUE* (nil)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">Global variable accessible to methods that contains a list that
+       represents the state of the queue in FrameGet-Z when this method
+       was found.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    *CALLING-FRAME* (nil)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">Global variable accessible to methods that contains the name of
+       the frame to which the message was sent.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    *MESSAGE-NAME* (nil)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">The name of the current message being processed.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    *MESSAGE-ARGUMENTS* (nil)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">The list of arguments of the current message being processed.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    *METHOD-TYPE* (:method)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">The type of method currently being applied (:method, :before, 
+       or :after).</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    CALL-NEXT-METHOD "()"                                               [MACRO]
+       Calls the next method up in the calling hierarchy for this frame.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    SEND (frame message &rest args)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Sends a message to the frame, and receives method(s) from the frame
+       for dealing with the message. Executes the methods in the frame
+       environment of the calling frame, along with any supplied
+       arguments.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    RUN-METHODS (frame message args &amp;optional (type :method)         
+                 ancestors)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Sends MESSAGE to FRAME, retrieving any methods of the proper TYPE
+       (:METHOD, :AFTER, or :BEFORE). Calls the methods on the ARGS. If
+       ANCESTORS is supplied, it is used as the focus for where to begin
+       searching for methods.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    SAVE-FRAMES (&amp;optional (filename "output.fwk")                   
+                 (frames *frames*))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Pretty prints the frames created by FrameWork into a file. The frames
+       are both human readable and lisp readable (so that loading the
+       file restores the frames into lisp).</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    SAVE-FRAME (frame &key (stream *standard-output*))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body"></li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    *DEFAULT-PPFRAME-INDENT* (3)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">Indentation factor: amount the indent is increased 
+       at each additional level.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    PPF (frame &amp;optional (stream *standard-output*)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">&key (readable t) (indent 0))
+       A synonym for pprint-frame.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    PPRINT-FRAME (frame &amp;optional (stream *standard-output*)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">&key (readable t) (indent 0))
+       If readable is NIL, parentheses are omitted.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    *MAX-LEVELS* (3)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">Maximum number of levels in a Frame.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    PPRINT-FRAME-INTERNAL (frame stream &amp;optional (readable t)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">(indent 0) (level 0))</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    *FRAMEWORK-PROMPT* ("~%fw> ")</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">Prompt used in the FrameWork Listener.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    *PRINT-FRAME-BODIES* (t)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">If the result of a command execution is the name of a frame, the
+       frame body will be printed and the name returned.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    *FRAMEWORK-COMMANDS* (nil)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">List of defined commands for the listener.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    FRAMEWORK-COMMAND (name short-doc long-doc function)</li>
+    <li id="type">[STRUCTURE]</li>
+    <li id="body"></li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    DEFINE-FW-LISTENER-COMMAND (name arg-list short-doc long-doc        
+                                &body body)</li>
+    <li id="type">[MACRO]</li>
+    <li id="body">Defines a new command for the FrameWork listener. Name is either the
+       name of the command, or a list of synonyms. Short-doc is for the
+       summary help display. Long-doc is what should be displayed when
+       asking for detailed help on the command. If the last form in the
+       body is :noprint, the result of evaluating the command is not
+       printed. When called from the listener, the rest of the line is
+       received as arguments.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    DELETE-COMMAND (name)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Deletes a FrameWork listener command.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    FIND-COMMAND (name)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Finds the FrameWork listener command with that name or nickname.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    LISTIFY-STRING (string)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Turns a string into a list of symbols.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    *SCHEDULE* (nil)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">A list of actions which are executed once every tick of the clock.
+       They must have bounded execution time.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    GET-INPUT (&amp;optional (stream *standard-input*))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Gets input from the user. If the user isn't typing anything, runs
+       any functions found on the *schedule*.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    LISTENER "()"</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">A READ-EVAL-PRINT loop for convenient interaction with FrameWork and
+       demoing the system. Interprets framework commands in abbreviated
+       form, without parentheses and quotes. Typing the name of a frame will
+       display it pretty printed. Frames created using the listener are
+       accessible to the save-frame utility.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    FRAMEWORK-EVAL (line)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Evaluates commands typed to the framework listener by the user.
+       If the line begins with a symbol, and that symbol represents a
+       framework listener command, the apropriate command is called
+       with the rest of the line as input. If the symbol is the name
+       of a frame, it is pretty printed. Otherwise the line is treated
+       like a regular lisp form.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    EXPLODE (symbol)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body"></li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    IMPLODE (list)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body"></li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    CRUSH (a b)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body"></li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    *PROPERTIES-ARE-SYMBOLS* (nil)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">If T, properties are represented as P and ~P. 
+       If NIL, properties are represented as P and (NOT P).</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    NEGATE (property)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Forms the negation of property.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    HAS-PROPERTY (frame property &amp;optional (path :ako)               
+                  (path-facet :value) (property-slot :ako)
+                  (property-facet :mode))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Checks whether FRAME has the given PROPERTY. Property values are
+       stored on the MODE facet of the :AKO slot, and may be inherited
+       in a breadth-first manner from ancestors along the :AKO path. The
+       inheritance of a given property P may be blocked by the property
+       ~P (NOT P) occurring somewhere along the path from FRAME to the
+       ancestor with the property P. This provides for inheritance with
+       exceptions.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    TREE-PATH (frame paths &amp;optional (restrict nil)                  
+               (show-frame nil) (visited nil))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Constructs a tree from FRAME's inheritance along PATHS, suitable
+       for displaying using a graphing function. The resulting tree is
+       of the form (root subtree1 subtree2 ...) where each subtree is
+       of the same form. If SHOW-FRAME is T, includes the actual frame
+       structure of the leaves. RESTRICT is either a maximum depth,
+       a property, or a function of the form (FUNCALL <function> .
+       <args>). If RESTRICT is a property, only nodes with that property are
+       shown, with intermediate nodes visible, of course.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    FRAME-REP (frame restrict &amp;optional show-if-fails show-frame)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Creates a representation for the frame as a node in the graph.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    *SHOW-PARENTHESES* (t)</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">If T, shows the parentheses around the values.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    TREE-COPY (tree &amp;optional (keyp t)                               
+               (show-parens *show-parentheses*))</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Returns a copy of TREE (a frame). If show-parens is T, puts 
+       parentheses around the values. This is useful for display them as
+       individual nodes of the frame, instead of just a big list.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    *PATH-SPECIAL-SYMBOLS* ('(demon ako kindsof value default       
+                            if-needed if-added if-removed if-fetched
+                            mode put get remove after before method
+                            class instances thing type types parent
+                            child part-of parts is-component-of
+                            components))</li>
+    <li id="type">[VARIABLE]</li>
+    <li id="body">Symbols which should be treated as if they were in the keyword
+           package for path reading.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    PATH-READER (stream char)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Reader macro which reads in a special path syntax. For example,
+            $!cat.ako --> MAMMAL
+            $cat.ako  --> (MAMMAL SIAMESE).</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    PATH-GET! (frame &rest path)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Extracts the value at the end of the path beginning at frame
+       using frameget!. E.g., (path-get! me 'office 'room-number).
+       Here a path is a series of slots.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    PATH-GET (frame &rest path)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Extracts the values at the end of the path beginning at frame
+       using frameget. E.g., (path-get me 'office 'room-number).
+       Here a path is a series of slots.</li>
+    </ul>
+    
+    <ul id="function">
+    <li id="title">   
+    DEFINE-INVERSE-SLOTS (slot1 slot2)</li>
+    <li id="type">[FUNCTION]</li>
+    <li id="body">Defines two slots as slots and inverses of each other.</li>
+    </ul>
+    
+
+</body>
+</html>
